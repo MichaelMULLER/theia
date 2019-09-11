@@ -15,6 +15,7 @@
  ********************************************************************************/
 
 import '../../../src/main/style/status-bar.css';
+import '../../../src/main/browser/style/index.css';
 
 import { ContainerModule } from 'inversify';
 import {
@@ -31,11 +32,9 @@ import { HostedPluginServer, hostedServicePath, PluginServer, pluginServerJsonRp
 import { ModalNotification } from './dialogs/modal-notification';
 import { PluginWidget } from './plugin-ext-widget';
 import { PluginFrontendViewContribution } from './plugin-frontend-view-contribution';
-
-import '../../../src/main/browser/style/index.css';
 import { PluginExtDeployCommandService } from './plugin-ext-deploy-command';
-import { TextEditorService, TextEditorServiceImpl } from './text-editor-service';
-import { EditorModelService, EditorModelServiceImpl } from './text-editor-model-service';
+import { TextEditorService } from './text-editor-service';
+import { EditorModelService } from './text-editor-model-service';
 import { UntitledResourceResolver } from './editor/untitled-resource';
 import { MenusContributionPointHandler } from './menus/menus-contribution-handler';
 import { PluginContributionHandler } from './plugin-contribution-handler';
@@ -48,7 +47,6 @@ import { LanguageClientProvider } from '@theia/languages/lib/browser/language-cl
 import { LanguageClientProviderImpl } from './language-provider/plugin-language-client-provider';
 import { LanguageClientContributionProviderImpl } from './language-provider/language-client-contribution-provider-impl';
 import { LanguageClientContributionProvider } from './language-provider/language-client-contribution-provider';
-import { StoragePathService } from './storage-path-service';
 import { DebugSessionContributionRegistry } from '@theia/debug/lib/browser/debug-session-contribution';
 import { PluginDebugSessionContributionRegistry } from './debug/plugin-debug-session-contribution-registry';
 import { PluginDebugService } from './debug/plugin-debug-service';
@@ -60,6 +58,7 @@ import { ViewColumnService } from './view-column-service';
 import { ViewContextKeyService } from './view/view-context-key-service';
 import { PluginViewWidget, PluginViewWidgetIdentifier } from './view/plugin-view-widget';
 import { TreeViewWidgetIdentifier, VIEW_ITEM_CONTEXT_MENU, PluginTree, TreeViewWidget, PluginTreeModel } from './view/tree-view-widget';
+import { InPluginFileSystemWatcherManager } from './in-plugin-filesystem-watcher-manager';
 
 export default new ContainerModule((bind, unbind, isBound, rebind) => {
 
@@ -74,15 +73,15 @@ export default new ContainerModule((bind, unbind, isBound, rebind) => {
     bind(PluginApiFrontendContribution).toSelf().inSingletonScope();
     bind(CommandContribution).toService(PluginApiFrontendContribution);
 
-    bind(TextEditorService).to(TextEditorServiceImpl).inSingletonScope();
-    bind(EditorModelService).to(EditorModelServiceImpl).inSingletonScope();
+    bind(TextEditorService).toSelf().inSingletonScope();
+    bind(EditorModelService).toSelf().inSingletonScope();
 
     bind(UntitledResourceResolver).toSelf().inSingletonScope();
     bind(ResourceResolver).toService(UntitledResourceResolver);
 
     bind(FrontendApplicationContribution).toDynamicValue(ctx => ({
         onStart(app: FrontendApplication): MaybePromise<void> {
-            ctx.container.get(HostedPluginSupport).checkAndLoadPlugin(ctx.container);
+            ctx.container.get(HostedPluginSupport).onStart(ctx.container);
         }
     }));
     bind(HostedPluginServer).toDynamicValue(ctx => {
@@ -95,7 +94,6 @@ export default new ContainerModule((bind, unbind, isBound, rebind) => {
         const connection = ctx.container.get(WebSocketConnectionProvider);
         return connection.createProxy<PluginPathsService>(pluginPathsServicePath);
     }).inSingletonScope();
-    bind(StoragePathService).toSelf().inSingletonScope();
 
     bindViewContribution(bind, PluginFrontendViewContribution);
 
@@ -155,6 +153,7 @@ export default new ContainerModule((bind, unbind, isBound, rebind) => {
 
     bind(PluginContributionHandler).toSelf().inSingletonScope();
 
+    bind(InPluginFileSystemWatcherManager).toSelf().inSingletonScope();
     bind(TextContentResourceResolver).toSelf().inSingletonScope();
     bind(ResourceResolver).toService(TextContentResourceResolver);
     bind(FSResourceResolver).toSelf().inSingletonScope();

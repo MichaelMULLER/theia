@@ -18,6 +18,7 @@ import { injectable, inject, named } from 'inversify';
 import { isOSX } from '../common/os';
 import { Emitter, Event } from '../common/event';
 import { CommandRegistry } from '../common/command';
+import { Disposable } from '../common/disposable';
 import { KeyCode, KeySequence, Key } from './keyboard/keys';
 import { KeyboardLayoutService } from './keyboard/keyboard-layout-service';
 import { ContributionProvider } from '../common/contribution-provider';
@@ -639,10 +640,13 @@ export class KeybindingRegistry {
         return commandId === KeybindingRegistry.PASSTHROUGH_PSEUDO_COMMAND;
     }
 
-    setKeymap(scope: KeybindingScope, bindings: Keybinding[]): void {
+    setKeymap(scope: KeybindingScope, bindings: Keybinding[]): Disposable {
         this.resetKeybindingsForScope(scope);
         this.doRegisterKeybindings(bindings, scope);
         this.keybindingsChanged.fire(undefined);
+        return Disposable.create(() => {
+            // TODO
+        });
     }
 
     /**

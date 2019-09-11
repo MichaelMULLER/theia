@@ -14,6 +14,7 @@
  * SPDX-License-Identifier: EPL-2.0 OR GPL-2.0 WITH Classpath-exception-2.0
  ********************************************************************************/
 
+import { DisposableCollection } from '@theia/core/lib/common/disposable';
 import { MAIN_RPC_CONTEXT, ConnectionMain, ConnectionExt } from '../../common/plugin-api-rpc';
 import { RPCProtocol } from '../../common/rpc-protocol';
 import { PluginConnection } from '../../common/connection';
@@ -26,10 +27,15 @@ import { PluginMessageWriter } from '../../common/plugin-message-writer';
  */
 export class ConnectionMainImpl implements ConnectionMain {
 
-    private proxy: ConnectionExt;
-    private connections = new Map<string, PluginConnection>();
+    private readonly proxy: ConnectionExt;
+    private readonly connections = new Map<string, PluginConnection>();
+    private readonly toDispose = new DisposableCollection();
     constructor(rpc: RPCProtocol) {
         this.proxy = rpc.getProxy(MAIN_RPC_CONTEXT.CONNECTION_EXT);
+    }
+
+    dispose(): void {
+        this.toDispose.dispose();
     }
 
     /**
@@ -85,12 +91,14 @@ export class ConnectionMainImpl implements ConnectionMain {
     protected async doCreateConnection(id: string): Promise<PluginConnection> {
         const reader = new PluginMessageReader();
         const writer = new PluginMessageWriter(id, this.proxy);
-        return new PluginConnection(
+        const connection = new PluginConnection(
             reader,
             writer,
             () => {
                 this.connections.delete(id);
                 this.proxy.$deleteConnection(id);
             });
+        this.toDispose.push(connection);
+        return connection;
     }
 }

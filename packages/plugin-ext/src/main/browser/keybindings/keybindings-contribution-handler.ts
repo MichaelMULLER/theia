@@ -19,6 +19,7 @@ import { PluginContribution, Keybinding as PluginKeybinding } from '../../../com
 import { Keybinding, KeybindingRegistry, KeybindingScope } from '@theia/core/lib/browser/keybinding';
 import { ILogger } from '@theia/core/lib/common/logger';
 import { OS } from '@theia/core/lib/common/os';
+import { Disposable } from '@theia/core/lib/common/disposable';
 
 @injectable()
 export class KeybindingsContributionPointHandler {
@@ -29,9 +30,9 @@ export class KeybindingsContributionPointHandler {
     @inject(KeybindingRegistry)
     private readonly keybindingRegistry: KeybindingRegistry;
 
-    handle(contributions: PluginContribution): void {
+    handle(contributions: PluginContribution): Disposable {
         if (!contributions || !contributions.keybindings) {
-            return;
+            return Disposable.NULL;
         }
         const keybindings: Keybinding[] = [];
         for (const raw of contributions.keybindings) {
@@ -48,7 +49,7 @@ export class KeybindingsContributionPointHandler {
                 }
             }
         }
-        this.keybindingRegistry.setKeymap(KeybindingScope.USER, keybindings);
+        return this.keybindingRegistry.setKeymap(KeybindingScope.USER, keybindings);
     }
 
     protected toKeybinding(pluginKeybinding: PluginKeybinding): Keybinding | undefined {

@@ -16,7 +16,7 @@
 
 import * as Ajv from 'ajv';
 import { inject, injectable, interfaces, named, postConstruct } from 'inversify';
-import { ContributionProvider, bindContributionProvider, escapeRegExpCharacters, Emitter, Event } from '../../common';
+import { ContributionProvider, bindContributionProvider, escapeRegExpCharacters, Emitter, Event, Disposable } from '../../common';
 import { PreferenceScope } from './preference-scope';
 import { PreferenceProvider, PreferenceProviderDataChange } from './preference-provider';
 import {
@@ -249,10 +249,15 @@ export class PreferenceSchemaProvider extends PreferenceProvider {
         return this.combinedSchema;
     }
 
-    setSchema(schema: PreferenceSchema): void {
+    setSchema(schema: PreferenceSchema): Disposable {
         const changes = this.doSetSchema(schema);
         this.fireDidPreferenceSchemaChanged();
         this.emitPreferencesChangedEvent(changes);
+        return {
+            dispose: () => {
+                // TODO: unset schema
+            }
+        };
     }
 
     getPreferences(): { [name: string]: any } {

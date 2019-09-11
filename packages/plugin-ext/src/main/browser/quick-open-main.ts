@@ -40,10 +40,10 @@ import URI from 'vscode-uri';
 import { ThemeIcon, QuickInputButton } from '../../plugin/types-impl';
 import { QuickPickService, QuickPickItem, QuickPickValue } from '@theia/core/lib/common/quick-pick-service';
 import { QuickTitleBar } from '@theia/core/lib/browser/quick-open/quick-title-bar';
-import { DisposableCollection } from '@theia/core/lib/common/disposable';
+import { DisposableCollection, Disposable } from '@theia/core/lib/common/disposable';
 import { QuickTitleButtonSide } from '@theia/core/lib/common/quick-open-model';
 
-export class QuickOpenMainImpl implements QuickOpenMain, QuickOpenModel {
+export class QuickOpenMainImpl implements QuickOpenMain, QuickOpenModel, Disposable {
 
     private quickInput: QuickInputService;
     private quickPick: QuickPickService;
@@ -58,6 +58,8 @@ export class QuickOpenMainImpl implements QuickOpenMain, QuickOpenModel {
 
     private activeElement: HTMLElement | undefined;
 
+    protected readonly toDispose = new DisposableCollection();
+
     constructor(rpc: RPCProtocol, container: interfaces.Container) {
         this.proxy = rpc.getProxy(MAIN_RPC_CONTEXT.QUICK_OPEN_EXT);
         this.delegate = container.get(MonacoQuickOpenService);
@@ -65,6 +67,11 @@ export class QuickOpenMainImpl implements QuickOpenMain, QuickOpenModel {
         this.quickTitleBar = container.get(QuickTitleBar);
         this.quickPick = container.get(QuickPickService);
         this.sharedStyle = container.get(PluginSharedStyle);
+        this.toDispose.push(Disposable.create(() => this.$hide()));
+    }
+
+    dispose(): void {
+        this.toDispose.dispose();
     }
 
     private cleanUp(): void {
@@ -217,7 +224,11 @@ export class QuickOpenMainImpl implements QuickOpenMain, QuickOpenModel {
         disposableListeners.push(this.quickTitleBar.onDidTriggerButton(button => {
             this.proxy.$acceptOnDidTriggerButton(inputBox.quickInputIndex, button);
         }));
+        this.toDispose.push(disposableListeners);
         quickInput.then(selection => {
+            if (disposableListeners.disposed) {
+                return;
+            }
             if (selection) {
                 this.proxy.$acceptDidChangeSelection(inputBox.quickInputIndex, selection as string);
             }
@@ -303,7 +314,11 @@ export class QuickOpenMainImpl implements QuickOpenMain, QuickOpenModel {
         disposableListeners.push(this.quickTitleBar.onDidTriggerButton(button => {
             this.proxy.$acceptOnDidTriggerButton(options.quickInputIndex, button);
         }));
+        this.toDispose.push(disposableListeners);
         quickPick.then(selection => {
+            if (disposableListeners.disposed) {
+                return;
+            }
             if (selection) {
                 this.proxy.$acceptDidChangeSelection(options.quickInputIndex, selection as string);
             }

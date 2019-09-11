@@ -99,8 +99,7 @@ export class DeployQuickOpenItem extends QuickOpenItem {
         if (mode !== QuickOpenMode.OPEN) {
             return false;
         }
-        const promise = this.pluginServer.deploy(this.name);
-        promise.then(() => this.hostedPluginSupport.initPlugins());
+        this.pluginServer.deploy(this.name);
         return true;
     }
 

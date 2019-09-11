@@ -285,7 +285,7 @@ export class PluginManagerExtImpl implements PluginManagerExt, PluginManager {
                     this.pluginActivationPromises.get(plugin.model.id)!.reject(err);
                 }
                 this.messageRegistryProxy.$showMessage(MainMessageType.Error, `Activating extension ${id} failed: ${err.message}.`, {}, []);
-                console.error(`Error on activation of ${plugin.model.name} - ${err}`);
+                console.error(`Error on activation of ${plugin.model.name}`, err);
                 return false;
             }
         } else {

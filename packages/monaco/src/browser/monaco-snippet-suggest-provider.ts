@@ -21,6 +21,7 @@
 import * as jsoncparser from 'jsonc-parser';
 import { injectable, inject } from 'inversify';
 import URI from '@theia/core/lib/common/uri';
+import { Disposable, DisposableCollection } from '@theia/core/lib/common/disposable';
 import { FileSystem, FileSystemError } from '@theia/filesystem/lib/common';
 import { CompletionTriggerKind } from '@theia/languages/lib/browser';
 
@@ -114,7 +115,8 @@ export class MonacoSnippetSuggestProvider implements monaco.languages.Completion
         }
     }
 
-    fromURI(uri: string | URI, options: SnippetLoadOptions): Promise<void> {
+    fromURI(uri: string | URI, options: SnippetLoadOptions): Disposable {
+        const toDispose = new DisposableCollection();
         const pending = this.loadURI(uri, options);
         const { language } = options;
         const scopes = Array.isArray(language) ? language : !!language ? [language] : ['*'];
@@ -123,7 +125,8 @@ export class MonacoSnippetSuggestProvider implements monaco.languages.Completion
             pendingSnippets.push(pending);
             this.pendingSnippets.set(scope, pendingSnippets);
         }
-        return pending;
+        // TODO unload snippets
+        return toDispose;
     }
     /**
      * should NOT throw to prevent load erros on suggest

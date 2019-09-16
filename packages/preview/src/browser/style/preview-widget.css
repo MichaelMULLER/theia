@@ -17,6 +17,7 @@
 .theia-preview-widget {
 	overflow-y: auto;
     overflow-x: hidden;
+    background-color: var(--theia-layout-color0);
 }
 
 .theia-preview-widget .scrollBeyondLastLine {

@@ -234,6 +234,9 @@ export class PreferenceSchemaProvider extends PreferenceProvider {
         if (this.configurations.isSectionName(name)) {
             return true;
         }
+        if (Object.keys(this.combinedSchema.properties).some(p => p.startsWith(name + '.'))) {
+            return true;
+        }
         const result = this.validateFunction({ [name]: value }) as boolean;
         if (!result && !(name in this.combinedSchema.properties)) {
             // in order to avoid reporting it on each change
